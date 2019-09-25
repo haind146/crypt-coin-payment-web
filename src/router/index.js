@@ -21,6 +21,10 @@ const router = new Router({
   mode: 'history',
   routes: [
     {
+      path: '',
+      component: () => import('@/views/Home.vue')
+    },
+    {
       path: '/admin',
       component: () => import('@/views/Admin.vue'),
       children: [
