@@ -4,6 +4,19 @@
     fluid
   >
     <v-row justify="center">
+      <v-col cols="12">
+        <material-card
+          color="green"
+          title="Users"
+          text="List all users"
+        >
+          <v-data-table
+            :headers="headers"
+            :items="items"
+            hide-default-footer
+          />
+        </material-card>
+      </v-col>
       <v-col
         cols="12"
         md="8"

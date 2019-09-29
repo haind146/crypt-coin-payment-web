@@ -2,14 +2,13 @@
   <v-container
     class="fill-height"
     fluid
-    grid-list-xl
   >
     <v-row justify="center">
       <v-col cols="12">
         <material-card
           color="green"
-          title="Simple Table"
-          text="Here is a subtitle for this table"
+          title="Invoices"
+          text="List all new invoices"
         >
           <v-data-table
             :headers="headers"
@@ -18,13 +17,19 @@
           />
         </material-card>
       </v-col>
+      <div class="text-center">
+        <v-pagination
+          v-model="page"
+          :length="6"
+        />
+      </div>
 
       <v-col cols="12">
         <material-card
           color="green"
           flat
           full-width
-          title="Table on Plain Background"
+          title="Transactions"
           text="Here is a subtitle for this table"
         >
           <v-data-table
@@ -34,6 +39,12 @@
           />
         </material-card>
       </v-col>
+      <div class="text-center">
+        <v-pagination
+          v-model="page"
+          :length="6"
+        />
+      </div>
     </v-row>
   </v-container>
 </template>

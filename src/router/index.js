@@ -22,19 +22,43 @@ const router = new Router({
   routes: [
     {
       path: '',
-      component: () => import('@/views/Home.vue')
+      component: () => import('@/views/Home.vue'),
+    },
+    {
+      path: '/login',
+      component: () => import('@/views/Login.vue'),
+    },
+    {
+      path: '/partner',
+      component: () => import('@/views/partner/PartnerHome.vue'),
     },
     {
       path: '/admin',
-      component: () => import('@/views/Admin.vue'),
+      component: () => import('@/views/admin/Admin.vue'),
       children: [
         {
           path: 'dashboard',
-          component: () => import('@/views/Dashboard.vue'),
+          component: () => import('@/views/admin/Dashboard.vue'),
         },
         {
           path: 'user-profile',
-          component: () => import('@/views/UserProfile.vue'),
+          component: () => import('@/views/admin/UserProfile.vue'),
+        },
+        {
+          path: 'notifications',
+          component: () => import('@/views/admin/Notifications.vue'),
+        },
+        {
+          path: 'icons',
+          component: () => import('@/views/admin/Icons.vue'),
+        },
+        {
+          path: 'typography',
+          component: () => import('@/views/admin/Typography.vue'),
+        },
+        {
+          path: 'table-list',
+          component: () => import('@/views/admin/TableList.vue'),
         },
       ],
     },

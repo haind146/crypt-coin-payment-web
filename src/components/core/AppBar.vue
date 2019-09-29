@@ -52,7 +52,7 @@
             <v-btn
               class="toolbar-items"
               icon
-              to="/notifications"
+              to="/admin/notifications"
               v-bind="attrs"
               v-on="on"
             >

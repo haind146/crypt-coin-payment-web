@@ -51,22 +51,6 @@
         <v-list-item-title v-text="link.text" />
       </v-list-item>
     </v-list>
-
-    <template v-slot:append>
-      <v-list nav>
-        <v-list-item
-          to="/upgrade"
-        >
-          <v-list-item-action>
-            <v-icon>mdi-package-up</v-icon>
-          </v-list-item-action>
-
-          <v-list-item-title class="font-weight-light">
-            Upgrade To PRO
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </template>
   </v-navigation-drawer>
 </template>
 
@@ -94,30 +78,15 @@
         {
           to: '/admin/user-profile',
           icon: 'mdi-account',
-          text: 'User Profile',
+          text: 'Users',
         },
         {
-          to: '/table-list',
+          to: '/admin/table-list',
           icon: 'mdi-clipboard-outline',
-          text: 'Table List',
+          text: 'Invoice - Transactions',
         },
         {
-          to: '/typography',
-          icon: 'mdi-format-font',
-          text: 'Typography',
-        },
-        {
-          to: '/icons',
-          icon: 'mdi-chart-bubble',
-          text: 'Icons',
-        },
-        {
-          to: '/maps',
-          icon: 'mdi-map-marker',
-          text: 'Maps',
-        },
-        {
-          to: '/notifications',
+          to: '/admin/notifications',
           icon: 'mdi-bell',
           text: 'Notifications',
         },
