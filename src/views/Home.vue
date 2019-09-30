@@ -192,8 +192,8 @@
                 lazy-validation
               >
                 <v-text-field
-                  color="cyan lighten-5"
                   v-model="name"
+                  color="cyan lighten-5"
                   :counter="10"
                   :rules="nameRules"
                   label="Name"

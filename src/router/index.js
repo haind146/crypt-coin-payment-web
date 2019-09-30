@@ -31,6 +31,12 @@ const router = new Router({
     {
       path: '/partner',
       component: () => import('@/views/partner/PartnerHome.vue'),
+      children: [
+        {
+          path: '',
+          component: () => import('@/views/partner/Applications.vue'),
+        },
+      ],
     },
     {
       path: '/admin',
