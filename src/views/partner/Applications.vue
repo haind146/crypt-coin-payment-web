@@ -4,7 +4,7 @@
       <v-col cols="12">
         <v-data-table
           :headers="headers"
-          :items="desserts"
+          :items="invoices"
           :items-per-page="5"
           class="elevation-1"
         >
@@ -50,6 +50,14 @@
           </template>
         </v-data-table>
       </v-col>
+      <v-col cols="12">
+        <v-data-table
+          :headers="transactions_header"
+          :items="transactions"
+          :items-per-page="5"
+          class="elevation-1"
+        />
+      </v-col>
     </v-row>
   </v-container>
 </template>
@@ -70,7 +78,7 @@
           { text: 'Experied time', value: 'experied_time' },
           { text: 'Payment method', value: 'payment_method' },
         ],
-        desserts: [
+        invoices: [
           {
             invoice_id: 1,
             status: 1,
@@ -111,29 +119,31 @@
             experied_time: '20:00:00',
             payment_method: 'BTC',
           },
+        ],
+        transactions_header: [
           {
-            invoice_id: 1,
-            status: 1,
-            amount: 0.2,
-            received_amount: 0.2,
-            experied_time: '20:00:00',
-            payment_method: 'BTC',
+            text: 'Transaction ID',
+            align: 'left',
+            sortable: false,
+            value: 'txId',
           },
+          { text: 'from', value: 'from' },
+          { text: 'to', value: 'to' },
+          { text: 'value', value: 'value' },
+          { text: 'block number', value: 'blockNumber' },
+          { text: 'block hash', value: 'blockHash' },
+          { text: 'invoice id', value: 'invoiceId' },
+        ],
+
+        transactions: [
           {
-            invoice_id: 1,
-            status: 1,
-            amount: 0.2,
-            received_amount: 0.2,
-            experied_time: '20:00:00',
-            payment_method: 'BTC',
-          },
-          {
-            invoice_id: 1,
-            status: 1,
-            amount: 0.2,
-            received_amount: 0.2,
-            experied_time: '20:00:00',
-            payment_method: 'BTC',
+            txId: '78ash3h4uifds9lkojwrwekbriufdsiufhdsjif',
+            from: '0xsajdhsajkfhjkh32j4h32jk4h32',
+            to: '0xkjshfkjdshfjdksnfb',
+            value: 'dsfdsfdsfdsf',
+            blockNumber: 32432432,
+            blockHash: 2314324324,
+            invoiceId: 324324324,
           },
         ],
         applications: [

@@ -55,7 +55,7 @@
 </template>
 
 <script>
-// Utilities
+  // Utilities
   import {
     mapMutations,
     mapState,
