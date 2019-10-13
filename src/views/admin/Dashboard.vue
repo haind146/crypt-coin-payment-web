@@ -12,7 +12,7 @@
           type="Line"
         >
           <h4 class="title font-weight-light">
-            Daily Sales
+            New users
           </h4>
 
           <p class="category d-inline-flex font-weight-light">
@@ -23,7 +23,7 @@
               mdi-arrow-up
             </v-icon>
             <span class="green--text">55%</span>&nbsp;
-            increase in today's sales
+            increase in today's users
           </p>
 
           <template v-slot:actions>
@@ -50,7 +50,7 @@
           type="Bar"
         >
           <h4 class="title font-weight-light">
-            Email Subscription
+            Daily transactions
           </h4>
           <p class="category d-inline-flex font-weight-light">
             Last Campaign Performance
@@ -79,7 +79,7 @@
           type="Line"
         >
           <h3 class="title font-weight-light">
-            Completed Tasks
+            Completed Orders
           </h3>
           <p class="category d-inline-flex font-weight-light">
             Last Last Campaign Performance

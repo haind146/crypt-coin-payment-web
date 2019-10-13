@@ -2,6 +2,7 @@
   <v-container>
     <v-card
       width="full"
+      style="max-height: 800px"
     >
       <v-row
         style="height: 800px"
@@ -90,15 +91,32 @@
               <v-btn
                 large
                 outlined
+                to="/partner/wallet/btc/send"
               >
                 Send
               </v-btn>
             </v-col>
           </v-row>
-          <v-row style="margin: 1em">
+          <v-row style="margin: 4em 1em 1em 1em">
             <h4 class="subtitle-1">History</h4>
           </v-row>
           <v-divider></v-divider>
+          <v-row no-gutters>
+            <v-data-table
+              style="width: 100%"
+              :headers="headers"
+              :items="transactions"
+              :single-expand="singleExpand"
+              :expanded.sync="expanded"
+              item-key="name"
+              show-expand
+              class="overflow-y-auto"
+            >
+              <template v-slot:expanded-item="{ headers }">
+                <td :colspan="headers.length">Peek-a-boo!</td>
+              </template>
+            </v-data-table>
+          </v-row>
         </v-col>
       </v-row>
     </v-card>
@@ -131,6 +149,27 @@
         {
           name: 'app 3',
           balance: 0.32432432,
+        },
+      ],
+      expanded: [],
+      singleExpand: false,
+      headers: [
+        {
+          text: 'Transaction hash',
+          align: 'left',
+          sortable: false,
+          value: 'txId',
+        },
+        { text: 'Type', value: 'type' },
+        { text: 'Amount change', value: 'amountChange' },
+        { text: 'Block number', value: 'blockNumber' },
+      ],
+      transactions: [
+        {
+          txId: 'Frozen Yogurt',
+          type: 159,
+          amountChange: 6.0,
+          blockNumber: 24,
         },
       ],
     }),

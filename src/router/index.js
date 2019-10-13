@@ -41,6 +41,10 @@ const router = new Router({
           component: () => import('@/views/partner/BtcWallet.vue'),
         },
         {
+          path: 'wallet/btc/send',
+          component: () => import('@/views/partner/SendBtc.vue'),
+        },
+        {
           path: 'wallet/eth',
           component: () => import('@/views/partner/EthWallet.vue'),
         },

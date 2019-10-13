@@ -67,7 +67,7 @@
       width="800px"
     >
       <v-card>
-        <v-card-title class="grey darken-2">
+        <v-card-title class="light-green darken-3 white--text">
           Create Application
         </v-card-title>
         <v-container>
@@ -87,38 +87,21 @@
                   >
                 </v-avatar>
                 <v-text-field
-                  placeholder="Name"
+                  placeholder="Application name"
                 />
               </v-row>
             </v-col>
-            <v-col cols="6">
-              <v-text-field
-                prepend-icon="business"
-                placeholder="Company"
-              />
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                placeholder="Job title"
-              />
+            <v-col cols="12">
+              <v-select
+                prepend-icon="mdi-bank"
+                :items="payment_methods"
+                label="Payment method"
+              ></v-select>
             </v-col>
             <v-col cols="12">
               <v-text-field
-                prepend-icon="mail"
-                placeholder="Email"
-              />
-            </v-col>
-            <v-col cols="12">
-              <v-text-field
-                type="tel"
-                prepend-icon="phone"
-                placeholder="(000) 000 - 0000"
-              />
-            </v-col>
-            <v-col cols="12">
-              <v-text-field
-                prepend-icon="notes"
-                placeholder="Notes"
+                prepend-icon="mdi-watermark"
+                placeholder="Mnemonic seed"
               />
             </v-col>
           </v-row>
@@ -170,6 +153,9 @@
             { icon: 'mdi-plus', text: 'Create label' },
           ],
         },
+      ],
+      payment_methods: [
+        'BTC', 'ETH',
       ],
     }),
   }
