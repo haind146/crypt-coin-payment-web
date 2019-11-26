@@ -209,6 +209,7 @@
 
                 <v-text-field
                   label="Phone number"
+                  v-model="phone"
                   required
                 />
 
@@ -220,6 +221,7 @@
                 />
 
                 <v-btn
+                  @click="submitInfo"
                   color="blue white--text"
                   class="mr-4"
                   justify="center"
@@ -329,13 +331,20 @@
 </template>
 
 <script>
+  import { leaveInfo } from '@/services/users.js'
   export default {
     data () {
       return {
         title: 'Coin Payment Gateway',
-
+        name: '',
+        email: '',
+        phone: '',
       }
     },
-    methods: {},
+    methods: {
+      async submitInfo () {
+        await leaveInfo(this.name, this.email, this.phone)
+      },
+    },
   }
 </script>
