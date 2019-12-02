@@ -5,14 +5,19 @@ import store from './store'
 import './plugins'
 import vuetify from './plugins/vuetify'
 import { sync } from 'vuex-router-sync'
+import VueCookies from 'vue-cookies'
 
 sync(store, router)
 
 Vue.config.productionTip = false
 
+// set default config
+VueCookies.config('7d')
+
 new Vue({
   router,
   store,
   vuetify,
+  VueCookies,
   render: h => h(App),
 }).$mount('#app')

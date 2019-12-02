@@ -1,6 +1,6 @@
 <template>
   <div id="inspire">
-    <partner-drawer :drawer="drawer"></partner-drawer>
+    <partner-drawer :drawer="drawer" />
     <v-app-bar
       :clipped-left="$vuetify.breakpoint.lgAndUp"
       app
@@ -70,7 +70,7 @@
         <v-card-title class="light-green darken-3 white--text">
           Create Application
         </v-card-title>
-        <v-container>
+        <v-container v-if="step === 1">
           <v-row>
             <v-col
               class="align-center justify-space-between"
@@ -87,6 +87,7 @@
                   >
                 </v-avatar>
                 <v-text-field
+                  v-model="appName"
                   placeholder="Application name"
                 />
               </v-row>
@@ -96,25 +97,23 @@
                 prepend-icon="mdi-bank"
                 :items="payment_methods"
                 label="Payment method"
-              ></v-select>
-            </v-col>
-            <v-col cols="12">
-              <v-text-field
-                prepend-icon="mdi-watermark"
-                placeholder="Mnemonic seed"
               />
             </v-col>
+            <!--            <v-col cols="12">-->
+            <!--              <v-text-field-->
+            <!--                prepend-icon="mdi-watermark"-->
+            <!--                placeholder="Mnemonic seed"-->
+            <!--              />-->
+            <!--            </v-col>-->
           </v-row>
         </v-container>
+        <v-container v-if="step === 2">
+          <p>{{ message }}</p>
+        </v-container>
         <v-card-actions>
-          <v-btn
-            text
-            color="primary"
-          >
-            More
-          </v-btn>
           <div class="flex-grow-1" />
           <v-btn
+            v-if="step===1"
             text
             color="primary"
             @click="dialog = false"
@@ -122,10 +121,20 @@
             Cancel
           </v-btn>
           <v-btn
+            v-if="step===1"
             text
-            @click="dialog = false"
+            :disabled="!appName"
+            @click="createApp"
           >
             Save
+          </v-btn>
+          <v-btn
+            v-if="step===2"
+            text
+            color="primary"
+            @click="() => {dialog = false; step=1}"
+          >
+            Close
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -134,6 +143,7 @@
 </template>
 
 <script>
+  import { createApplication } from '@/services/apis'
   export default {
     components: {
       PartnerDrawer: () => import('@/components/core/PartnerDrawer'),
@@ -154,9 +164,26 @@
           ],
         },
       ],
+      message: '',
+      step: 1,
+      appName: '',
       payment_methods: [
         'BTC', 'ETH',
       ],
     }),
+    methods: {
+      async createApp () {
+        try {
+          const result = await createApplication(this.appName)
+          console.log(result)
+          this.step = 2
+          this.message = result.message
+        } catch (e) {
+          console.log(e)
+          this.step = 2
+          this.message = e.message
+        }
+      },
+    },
   }
 </script>

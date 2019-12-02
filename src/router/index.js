@@ -37,6 +37,10 @@ const router = new Router({
           component: () => import('@/views/partner/Applications.vue'),
         },
         {
+          path: '/private-key',
+          component: () => import('@/views/partner/ImportPrivateKey.vue'),
+        },
+        {
           path: 'wallet/btc',
           component: () => import('@/views/partner/BtcWallet.vue'),
         },

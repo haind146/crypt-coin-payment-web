@@ -5,7 +5,6 @@
 </template>
 
 <script>
-  require('dotenv').config()
   export default {
     components: {},
   }
