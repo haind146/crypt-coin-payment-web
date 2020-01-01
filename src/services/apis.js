@@ -46,6 +46,11 @@ async function getTransactionsByOrder (orderId) {
   return result.data
 }
 
+async function getApplicationUtxos (appId) {
+  const result = await axios.get(host + '/api/user/sweep-money?application_id=' + appId, config)
+  return result.data
+}
+
 module.exports = {
   importExtendPublicKey,
   createApplication,
@@ -53,4 +58,5 @@ module.exports = {
   createOrder,
   getOrdersList,
   getTransactionsByOrder,
+  getApplicationUtxos,
 }

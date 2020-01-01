@@ -18,7 +18,7 @@
                 color="teal"
                 size="68"
               >
-                <span class="white--text headline">1</span>
+                <span class="white--text headline">{{currentApplication + 1}}</span>
               </v-avatar>
               <br>
             </v-row>
@@ -27,7 +27,7 @@
               style="margin: 1em"
             >
               <h4 class="subheading">
-                Application 1
+                {{applications[currentApplication].name}}
               </h4>
             </v-row>
           </div>
@@ -39,15 +39,15 @@
               v-for="(app, i) in applications"
               :key="i"
               style="padding: 1em"
+              @click="currentApplication=i"
             >
               <v-avatar
                 color="teal"
                 size="42"
               >
-                <span class="white--text headline">{{ i }}</span>
+                <span class="white--text headline">{{ i + 1 }}</span>
               </v-avatar>
-              <span style="margin: 0 1em 0 1em">{{ app.balance }}</span>
-              <v-icon>mdi-bitcoin</v-icon>
+              <span style="margin: 0 1em 0 1em">{{ app.name }}</span>
             </v-list-item>
           </v-list>
         </v-col>
@@ -91,9 +91,9 @@
               <v-btn
                 large
                 outlined
-                to="/partner/wallet/btc/send"
+                @click="dialog = true"
               >
-                Send
+                Withdraw
               </v-btn>
             </v-col>
           </v-row>
@@ -120,6 +120,57 @@
         </v-col>
       </v-row>
     </v-card>
+    <overlay-loading :loading="loading" />
+    <v-dialog
+      v-model="dialog"
+      width="600"
+    >
+      <v-card>
+        <v-card-title class="light-green darken-3 white--text">
+          Withdraw
+        </v-card-title>
+        <v-container>
+          <v-col
+            cols="12"
+          >
+            <v-text-field
+              v-model="recipientntAddress"
+              :rules="addressRules"
+              label="Recipient address"
+              required
+            />
+          </v-col>
+          <v-col
+            cols="12"
+          >
+            <v-text-field
+              v-model="prvateKeyPassword"
+              :rules="passwordRules"
+              label="Private Key Password"
+              type="password"
+              required
+            />
+          </v-col>
+        </v-container>
+        <v-card-actions>
+          <div class="flex-grow-1" />
+          <v-btn
+            text
+            color="primary"
+            @click="() => {dialog = false}"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            text
+            color="primary"
+            @click="sweepMoney"
+          >
+            Confirm
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -128,31 +179,52 @@
 </style>
 
 <script>
+  import Loading from '@/components/Loader.vue'
+  import { getApplicationsList, getApplicationUtxos } from '@/services/apis'
+  const CryptoJS = require('crypto-js')
+  const BitcoinJs = require('bitcoinjs-lib')
   export default {
+    components: {
+      'overlay-loading': Loading,
+    },
+    watch: {
+      async currentApplication () {
+        this.loading = true
+        const utxos = await getApplicationUtxos(this.applications[this.currentApplication].ID)
+        this.utxos = utxos.data
+        this.balance = 0
+        for (const utxo of utxos.data) {
+          this.balance += utxo.value
+        }
+        this.balanceUsd = this.balance * 7192
+        this.loading = false
+      },
+    },
+    async mounted () {
+      this.loading = true
+      const appList = await getApplicationsList()
+      this.applications = appList.data
+      this.currentApplication = 0
+      const utxos = await getApplicationUtxos(this.applications[this.currentApplication].ID)
+      this.utxos = utxos.data
+      this.balance = 0
+      for (const utxo of utxos.data) {
+        this.balance += utxo.value
+      }
+      this.balanceUsd = this.balance * 7192
+      this.loading = false
+    },
     data: () => ({
+      loading: false,
       dialog: false,
-      balance: 1.1235,
-      balanceUsd: 20000000,
-      applications: [
-        {
-          name: 'app 1',
-          balance: 0.321,
-        },
-        {
-          name: 'app 2',
-          balance: 0.2314324,
-        },
-        {
-          name: 'app 3',
-          balance: 0.32432432,
-        },
-        {
-          name: 'app 3',
-          balance: 0.32432432,
-        },
-      ],
+      currentApplication: 0,
+      balance: 0,
+      balanceUsd: 0,
+      applications: [],
       expanded: [],
       singleExpand: false,
+      passwordRules: [v => !!v || 'Password required'],
+      addressRules: [v => !!v || 'Address required'],
       headers: [
         {
           text: 'Transaction hash',
@@ -172,6 +244,45 @@
           blockNumber: 24,
         },
       ],
+      utxos: [],
+      recipientntAddress: '',
+      prvateKeyPassword: '',
     }),
+    methods: {
+      sweepMoney () {
+        const masterkeyEncrypt = $cookies.get('master_key')
+        const masterKey = CryptoJS.AES.decrypt(masterkeyEncrypt, this.prvateKeyPassword)
+        const masterKeyStr = masterKey.toString(CryptoJS.enc.Utf8)
+        const bip32 = BitcoinJs.bip32.fromBase58(masterKeyStr)
+        for (const utxo of this.utxos) {
+          console.log(utxo)
+          const privateKey = bip32.derivePath('m/44/1/' + utxo.address_path)
+          const keyPair = BitcoinJs.ECPair.fromPrivateKey(privateKey.privateKey)
+          const psbt = new BitcoinJs.Psbt({ network: BitcoinJs.networks.testnet })
+          psbt.setVersion(2) // These are defaults. This line is not needed.
+          psbt.setLocktime(0) // These are defaults. This line is not needed.
+          psbt.addInput({
+            // if hash is string, txid, if hash is Buffer, is reversed compared to txid
+            hash: utxo.tx_id,
+            index: utxo.vout,
+            sequence: 0xffffffff, // These are defaults. This line is not needed.
+
+            // non-segwit inputs now require passing the whole previous tx as Buffer
+            nonWitnessUtxo: Buffer.from(
+              utxo.raw_tx,
+              'hex',
+            ),
+          })
+          psbt.addOutput({
+            address: '2Mt3MNcm3RSsW49S68RpscQjYG1zJ1DYJ2v',
+            value: 100,
+          })
+          psbt.signInput(0, keyPair)
+          psbt.validateSignaturesOfInput(0)
+          psbt.finalizeAllInputs()
+          console.log(psbt.extractTransaction().toHex())
+        }
+      },
+    },
   }
 </script>
