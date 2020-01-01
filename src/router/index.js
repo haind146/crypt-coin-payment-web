@@ -29,6 +29,10 @@ const router = new Router({
       component: () => import('@/views/Login.vue'),
     },
     {
+      path: '/payment',
+      component: () => import('@/views/PaymentPage.vue')
+    },
+    {
       path: '/partner',
       component: () => import('@/views/partner/PartnerHome.vue'),
       children: [
