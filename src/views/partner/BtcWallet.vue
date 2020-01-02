@@ -18,7 +18,7 @@
                 color="teal"
                 size="68"
               >
-                <span class="white--text headline">{{currentApplication + 1}}</span>
+                <span class="white--text headline">{{ currentApplication + 1 }}</span>
               </v-avatar>
               <br>
             </v-row>
@@ -27,7 +27,7 @@
               style="margin: 1em"
             >
               <h4 class="subheading">
-                {{applications[currentApplication].name}}
+                {{ applications[currentApplication].name }}
               </h4>
             </v-row>
           </div>
@@ -57,7 +57,7 @@
         >
           <v-row no-gutters>
             <v-col
-              align="center"
+              class="align"
               cols="2"
             >
               <v-avatar
@@ -84,7 +84,7 @@
               </h3>
             </v-col>
             <v-col
-              align="right"
+              class="align"
               style="padding: 0.8em 1em 0 0"
               cols="4"
             >
@@ -98,9 +98,11 @@
             </v-col>
           </v-row>
           <v-row style="margin: 4em 1em 1em 1em">
-            <h4 class="subtitle-1">History</h4>
+            <h4 class="subtitle-1">
+              History
+            </h4>
           </v-row>
-          <v-divider></v-divider>
+          <v-divider />
           <v-row no-gutters>
             <v-data-table
               style="width: 100%"
@@ -113,7 +115,9 @@
               class="overflow-y-auto"
             >
               <template v-slot:expanded-item="{ headers }">
-                <td :colspan="headers.length">Peek-a-boo!</td>
+                <td :colspan="headers.length">
+                  Peek-a-boo!
+                </td>
               </template>
             </v-data-table>
           </v-row>
@@ -187,33 +191,6 @@
     components: {
       'overlay-loading': Loading,
     },
-    watch: {
-      async currentApplication () {
-        this.loading = true
-        const utxos = await getApplicationUtxos(this.applications[this.currentApplication].ID)
-        this.utxos = utxos.data
-        this.balance = 0
-        for (const utxo of utxos.data) {
-          this.balance += utxo.value
-        }
-        this.balanceUsd = this.balance * 7192
-        this.loading = false
-      },
-    },
-    async mounted () {
-      this.loading = true
-      const appList = await getApplicationsList()
-      this.applications = appList.data
-      this.currentApplication = 0
-      const utxos = await getApplicationUtxos(this.applications[this.currentApplication].ID)
-      this.utxos = utxos.data
-      this.balance = 0
-      for (const utxo of utxos.data) {
-        this.balance += utxo.value
-      }
-      this.balanceUsd = this.balance * 7192
-      this.loading = false
-    },
     data: () => ({
       loading: false,
       dialog: false,
@@ -248,40 +225,72 @@
       recipientntAddress: '',
       prvateKeyPassword: '',
     }),
+    watch: {
+      async currentApplication () {
+        this.loading = true
+        const utxos = await getApplicationUtxos(this.applications[this.currentApplication].ID)
+        this.utxos = utxos.data
+        this.balance = 0
+        for (const utxo of utxos.data) {
+          this.balance += utxo.value
+        }
+        this.balanceUsd = this.balance * 7192
+        this.loading = false
+      },
+    },
+    async mounted () {
+      this.loading = true
+      const appList = await getApplicationsList()
+      this.applications = appList.data
+      this.currentApplication = 0
+      const utxos = await getApplicationUtxos(this.applications[this.currentApplication].ID)
+      this.utxos = utxos.data
+      this.balance = 0
+      for (const utxo of utxos.data) {
+        this.balance += utxo.value
+      }
+      this.balanceUsd = this.balance * 7192
+      this.loading = false
+    },
     methods: {
       sweepMoney () {
         const masterkeyEncrypt = $cookies.get('master_key')
         const masterKey = CryptoJS.AES.decrypt(masterkeyEncrypt, this.prvateKeyPassword)
         const masterKeyStr = masterKey.toString(CryptoJS.enc.Utf8)
         const bip32 = BitcoinJs.bip32.fromBase58(masterKeyStr)
-        for (const utxo of this.utxos) {
-          console.log(utxo)
-          const privateKey = bip32.derivePath('m/44/1/' + utxo.address_path)
-          const keyPair = BitcoinJs.ECPair.fromPrivateKey(privateKey.privateKey)
-          const psbt = new BitcoinJs.Psbt({ network: BitcoinJs.networks.testnet })
-          psbt.setVersion(2) // These are defaults. This line is not needed.
-          psbt.setLocktime(0) // These are defaults. This line is not needed.
+        const psbt = new BitcoinJs.Psbt({ network: BitcoinJs.networks.testnet })
+        psbt.setVersion(2) // These are defaults. This line is not needed.
+        psbt.setLocktime(0) // These are defaults. This line is not needed.
+        const feeEachInput = 0.000002
+        let totalValue = 0
+        for (let index = 0; index < this.utxos.length; index++) {
+          const utxo = this.utxos[index]
+          totalValue += utxo.value
+          // if hash is string, txid, if hash is Buffer, is reversed compared to txid
           psbt.addInput({
-            // if hash is string, txid, if hash is Buffer, is reversed compared to txid
             hash: utxo.tx_id,
             index: utxo.vout,
             sequence: 0xffffffff, // These are defaults. This line is not needed.
-
             // non-segwit inputs now require passing the whole previous tx as Buffer
             nonWitnessUtxo: Buffer.from(
               utxo.raw_tx,
               'hex',
             ),
           })
-          psbt.addOutput({
-            address: '2Mt3MNcm3RSsW49S68RpscQjYG1zJ1DYJ2v',
-            value: 100,
-          })
-          psbt.signInput(0, keyPair)
-          psbt.validateSignaturesOfInput(0)
-          psbt.finalizeAllInputs()
-          console.log(psbt.extractTransaction().toHex())
         }
+        psbt.addOutput({
+          address: '2Mt3MNcm3RSsW49S68RpscQjYG1zJ1DYJ2v',
+          value: totalValue - this.utxos.length * feeEachInput,
+        })
+        for (let index = 0; index < this.utxos.length; index++) {
+          const utxo = this.utxos[index]
+          const privateKey = bip32.derivePath('m/44/1/' + utxo.address_path)
+          const keyPair = BitcoinJs.ECPair.fromPrivateKey(privateKey.privateKey)
+          psbt.signInput(index, keyPair)
+          psbt.validateSignaturesOfInput(index)
+        }
+        psbt.finalizeAllInputs()
+        console.log(psbt.extractTransaction().toHex())
       },
     },
   }
