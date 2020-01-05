@@ -80,7 +80,7 @@
                 {{ balance }} BTC
               </h2>
               <h3 class=".subtitle-1">
-                {{ balanceUsd }} USD
+                {{ balanceUsd.toFixed(4) }} USD
               </h3>
             </v-col>
             <v-col
@@ -138,7 +138,7 @@
             cols="12"
           >
             <v-text-field
-              v-model="recipientntAddress"
+              v-model="recipientAddress"
               :rules="addressRules"
               label="Recipient address"
               required
@@ -175,6 +175,34 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog
+          v-model="noticeDialog"
+          width="500"
+        >
+          <v-card>
+            <v-card-title
+              class="headline grey lighten-2"
+              primary-title
+            >
+              Notice
+            </v-card-title>
+
+            <v-card-text>{{noticeMessage}}</v-card-text>
+
+            <v-divider />
+
+            <v-card-actions>
+              <v-spacer />
+              <v-btn
+                color="primary"
+                text
+                @click="noticeDialog = false"
+              >
+                CLOSE
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
   </v-container>
 </template>
 
@@ -195,6 +223,8 @@
       loading: false,
       dialog: false,
       currentApplication: 0,
+      noticeMessage: '',
+      noticeDialog: false,
       balance: 0,
       balanceUsd: 0,
       applications: [],
@@ -222,7 +252,7 @@
         },
       ],
       utxos: [],
-      recipientntAddress: '',
+      recipientAddress: '',
       prvateKeyPassword: '',
     }),
     watch: {
@@ -257,15 +287,21 @@
         const masterkeyEncrypt = $cookies.get('master_key')
         const masterKey = CryptoJS.AES.decrypt(masterkeyEncrypt, this.prvateKeyPassword)
         const masterKeyStr = masterKey.toString(CryptoJS.enc.Utf8)
-        const bip32 = BitcoinJs.bip32.fromBase58(masterKeyStr)
+        try {
+          const bip32 = BitcoinJs.bip32.fromBase58(masterKeyStr)
+        } catch (e) {
+          this.noticeDialog = true
+          this.noticeMessage = "Invalid password, can not decrypt private key"
+          return
+        }
         const psbt = new BitcoinJs.Psbt({ network: BitcoinJs.networks.testnet })
         psbt.setVersion(2) // These are defaults. This line is not needed.
         psbt.setLocktime(0) // These are defaults. This line is not needed.
-        const feeEachInput = 0.000002
+        const feeEachInput = 200
         let totalValue = 0
         for (let index = 0; index < this.utxos.length; index++) {
           const utxo = this.utxos[index]
-          totalValue += utxo.value
+          totalValue += parseInt(utxo.value*100000000)
           // if hash is string, txid, if hash is Buffer, is reversed compared to txid
           psbt.addInput({
             hash: utxo.tx_id,
@@ -278,19 +314,33 @@
             ),
           })
         }
-        psbt.addOutput({
-          address: '2Mt3MNcm3RSsW49S68RpscQjYG1zJ1DYJ2v',
+        try {
+          psbt.addOutput({
+          address: this.recipientAddress,
           value: totalValue - this.utxos.length * feeEachInput,
-        })
-        for (let index = 0; index < this.utxos.length; index++) {
-          const utxo = this.utxos[index]
-          const privateKey = bip32.derivePath('m/44/1/' + utxo.address_path)
-          const keyPair = BitcoinJs.ECPair.fromPrivateKey(privateKey.privateKey)
-          psbt.signInput(index, keyPair)
-          psbt.validateSignaturesOfInput(index)
+         })  
+        } catch (e) {
+          this.noticeDialog = true
+          this.noticeMessage = "address not valid"
+          return
         }
-        psbt.finalizeAllInputs()
-        console.log(psbt.extractTransaction().toHex())
+        
+        try {
+          for (let index = 0; index < this.utxos.length; index++) {
+            const utxo = this.utxos[index]
+            const privateKey = bip32.derivePath('m/44/1/' + utxo.address_path)
+            const keyPair = BitcoinJs.ECPair.fromPrivateKey(privateKey.privateKey)
+            psbt.signInput(index, keyPair)
+            psbt.validateSignaturesOfInput(index)
+          }
+          psbt.finalizeAllInputs()
+          console.log(psbt.extractTransaction().toHex())
+          this.dialog = false
+        } catch (e) {
+          this.noticeDialog = true
+          this.noticeMessage = e.message
+        }
+        
       },
     },
   }

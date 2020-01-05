@@ -171,6 +171,12 @@
         'BTC', 'ETH',
       ],
     }),
+    async mounted () {
+      const masterKey = $cookies.get('master_key')
+      if (!masterKey) {
+        this.$router.push('/private-key')
+      }
+    },
     methods: {
       async createApp () {
         try {
