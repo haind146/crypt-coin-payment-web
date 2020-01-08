@@ -15,7 +15,6 @@
             Login
           </router-link>
         </v-btn>
-
         <v-btn text>
           Register
         </v-btn>

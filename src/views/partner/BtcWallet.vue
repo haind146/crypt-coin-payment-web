@@ -77,7 +77,7 @@
               style="margin-top: 0.5em"
             >
               <h2 class="headline">
-                {{ balance }} BTC
+                {{ balance.toFixed(6) }} BTC
               </h2>
               <h3 class=".subtitle-1">
                 {{ balanceUsd.toFixed(4) }} USD
@@ -108,17 +108,9 @@
               style="width: 100%"
               :headers="headers"
               :items="transactions"
-              :single-expand="singleExpand"
-              :expanded.sync="expanded"
               item-key="name"
-              show-expand
               class="overflow-y-auto"
             >
-              <template v-slot:expanded-item="{ headers }">
-                <td :colspan="headers.length">
-                  Peek-a-boo!
-                </td>
-              </template>
             </v-data-table>
           </v-row>
         </v-col>
@@ -212,7 +204,7 @@
 
 <script>
   import Loading from '@/components/Loader.vue'
-  import { getApplicationsList, getApplicationUtxos } from '@/services/apis'
+  import { getApplicationsList, getApplicationUtxos, sendRawTransaction, getSweepTransaction } from '@/services/apis'
   const CryptoJS = require('crypto-js')
   const BitcoinJs = require('bitcoinjs-lib')
   export default {
@@ -237,20 +229,13 @@
           text: 'Transaction hash',
           align: 'left',
           sortable: false,
-          value: 'txId',
+          value: 'TransactionHash',
         },
-        { text: 'Type', value: 'type' },
-        { text: 'Amount change', value: 'amountChange' },
-        { text: 'Block number', value: 'blockNumber' },
+        { text: 'Value', value: 'value' },
+        { text: 'Fee', value: 'fee' },
+        { text: 'Block number', value: 'block_number' },
       ],
-      transactions: [
-        {
-          txId: 'Frozen Yogurt',
-          type: 159,
-          amountChange: 6.0,
-          blockNumber: 24,
-        },
-      ],
+      transactions: [],
       utxos: [],
       recipientAddress: '',
       prvateKeyPassword: '',
@@ -260,6 +245,8 @@
         this.loading = true
         const utxos = await getApplicationUtxos(this.applications[this.currentApplication].ID)
         this.utxos = utxos.data
+        const listTx = await getSweepTransaction(this.applications[this.currentApplication].ID)
+        this.transactions = listTx.data
         this.balance = 0
         for (const utxo of utxos.data) {
           this.balance += utxo.value
@@ -273,6 +260,8 @@
       const appList = await getApplicationsList()
       this.applications = appList.data
       this.currentApplication = 0
+      const listTx = await getSweepTransaction(this.applications[this.currentApplication].ID)
+      this.transactions = listTx.data
       const utxos = await getApplicationUtxos(this.applications[this.currentApplication].ID)
       this.utxos = utxos.data
       this.balance = 0
@@ -283,12 +272,13 @@
       this.loading = false
     },
     methods: {
-      sweepMoney () {
+      async sweepMoney () {
         const masterkeyEncrypt = $cookies.get('master_key')
         const masterKey = CryptoJS.AES.decrypt(masterkeyEncrypt, this.prvateKeyPassword)
         const masterKeyStr = masterKey.toString(CryptoJS.enc.Utf8)
+        let bip32
         try {
-          const bip32 = BitcoinJs.bip32.fromBase58(masterKeyStr)
+          bip32 = BitcoinJs.bip32.fromBase58(masterKeyStr)
         } catch (e) {
           this.noticeDialog = true
           this.noticeMessage = "Invalid password, can not decrypt private key"
@@ -334,7 +324,18 @@
             psbt.validateSignaturesOfInput(index)
           }
           psbt.finalizeAllInputs()
-          console.log(psbt.extractTransaction().toHex())
+          this.loading = true
+          const sendResult = await sendRawTransaction(psbt.extractTransaction().toHex())
+          // console.log(sendResult)
+          if (sendResult.txhash) {
+            this.transactions.push({
+              TransactionHash: sendResult.txhash,
+              value: totalValue - this.utxos.length * feeEachInput,
+              fee: this.utxos.length * feeEachInput
+            })
+          }
+          this.loading = false
+
           this.dialog = false
         } catch (e) {
           this.noticeDialog = true

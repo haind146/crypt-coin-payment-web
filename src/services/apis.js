@@ -51,6 +51,19 @@ async function getApplicationUtxos (appId) {
   return result.data
 }
 
+async function sendRawTransaction (rawTx) {
+  const result = await axios.post(host + '/api/user/send-transsaction', {
+    raw_tx: rawTx,
+  }, config)
+  return result.data
+}
+
+async function getSweepTransaction (appId) {
+  const result = await axios.get(host + '/api/user/sweep-transaction?application_id='+ appId, config)
+  return result.data
+}
+
+
 module.exports = {
   importExtendPublicKey,
   createApplication,
@@ -59,4 +72,6 @@ module.exports = {
   getOrdersList,
   getTransactionsByOrder,
   getApplicationUtxos,
+  sendRawTransaction,
+  getSweepTransaction
 }
